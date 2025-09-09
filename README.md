@@ -2,16 +2,16 @@
 This makes (TM) and (R) marks look more like they're supposed to: superscripted and smaller than the neighboring text.
 
 ## CSS:
-The `.reg-trademark` and `.trademark` classes use `font-size: 0.6em` and `vertical-align: super` to mimic the superscript appearance of <pre><sup>&reg;</sup></pre> and <pre><sup>&trade;</sup></pre>.
+The `.reg-trademark` and `.trademark` classes use `font-size: 0.6em` and `vertical-align: super` to mimic the superscript appearance of `<sup>&reg;</sup>` and `<sup>&trade;</sup>`.
       
 ## JavaScript:
 Uses a `TreeWalker` to select text nodes, explicitly excluding those within <pre><sup></pre> or <pre><script></pre> tags via the `acceptNode` filter.
 
-Applies a regular expression <pre>(®|&reg;|™|&trade;)</pre> to match standalone symbols.
+Applies a regular expression `(®|&reg;|™|&trade;)` to match standalone symbols.
 
-Wraps matched symbols in <pre><span class="symbol-sup"></pre> tags.
+Wraps matched symbols in `<span class="symbol-sup">` tags.
 
 ## Behavior:
 Standalone ®, &reg;, ™, and &trade; are styled to appear superscripted.
 
-This solution ensures that only standalone ®, &reg;, ™, and &trade; symbols are styled, leaving <pre><sup>&reg;</sup></pre> and <pre><sup>&trade;</sup></pre> untouched.
+This solution ensures that only standalone ®, &reg;, ™, and &trade; symbols are styled, leaving `<sup>&reg;</sup>` and `<sup>&trade;</sup>` untouched.
