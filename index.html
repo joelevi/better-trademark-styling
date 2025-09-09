@@ -1,1 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joez Better Trademark Styling for the Registered and Trademark Symbols</title>
+    <style>
+        /* CSS to style registered and trademark symbols */
+        .symbol-sup {
+            font-size: 0.6em; /* Smaller size to mimic superscript */
+            vertical-align: super; /* Positions text higher like <sup> */
+            line-height: normal; /* Prevents line spacing issues */
+        }
+    </style>
+</head>
+<body>
+    <h1>Joez Better Trademark Styling for the Registered and Trademark Symbols</h1>
+    <h2>CSS:</h2>
+    <p>The `.reg-trademark` and `.trademark` classes use `font-size: 0.6em` and `vertical-align: super` to mimic the superscript appearance of <pre><sup>&reg;</sup></pre> and <pre><sup>&trade;</sup></pre>. </p>
+      
+    <h2>JavaScript:</h2>
+    <p>Uses a `TreeWalker` to select text nodes, explicitly excluding those within <pre><sup></pre> or <pre><script></pre> tags via the `acceptNode` filter. </p>
+    <p>Applies a regular expression <pre>(®|&reg;|™|&trade;)</pre> to match standalone symbols. </p>
+    <p>Wraps matched symbols in <pre><span class="symbol-sup"></pre> tags. </p>
 
+    <h2>Behavior:</h2>
+    <p>Standalone ®, &reg;, ™, and &trade; are styled to appear superscripted. </p>
+    <p>This solution ensures that only standalone ®, &reg;, ™, and &trade; symbols are styled, leaving <pre><sup>&reg;</sup></pre> and <pre><sup>&trade;</sup></pre> untouched. </p>
+
+    <h2>Example:</h2>
+    <ul>
+      <li>This is a test of symbols: ®, &reg;, ™, and &trade; in text</li>
+      <li>BrandName® and BrandName&reg; should appear superscripted</li>
+      <li>ProductName™ and ProductName&trade; should also appear superscripted</li>
+      <li>Ignored cases: BrandName<sup>&reg;</sup> and ProductName<sup>&trade;</sup> remain unchanged</li>
+    </ul>
+  
+    <script>
+        // JavaScript to wrap standalone ®, &reg;, ™, and &trade; in spans with symbol-sup class
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select all text nodes in the document
+            const walker = document.createTreeWalker(
+                document.body,
+                NodeFilter.SHOW_TEXT,
+                {
+                    acceptNode: (node) => {
+                        // Exclude text nodes inside <sup> or <script> elements
+                        if (node.parentElement.closest('sup') || node.parentElement.tagName === 'SCRIPT') {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                }
+            );
+
+            const nodes = [];
+            let node;
+            // Collect all text nodes
+            while ((node = walker.nextNode())) {
+                nodes.push(node);
+            }
+
+            // Regular expression to match standalone ®, &reg;, ™, or &trade;
+            const regExp = /(®|&reg;|™|&trade;)/g;
+
+            nodes.forEach((textNode) => {
+                if (regExp.test(textNode.textContent)) {
+                    // Create a temporary container to parse the text
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = textNode.textContent.replace(regExp, '<span class="symbol-sup">$1</span>');
+
+                    // Replace the text node with the new nodes
+                    const fragment = document.createDocumentFragment();
+                    while (tempDiv.firstChild) {
+                        fragment.appendChild(tempDiv.firstChild);
+                    }
+                    textNode.replaceWith(fragment);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
