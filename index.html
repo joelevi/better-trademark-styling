@@ -36,111 +36,50 @@
     </ul>
   
     <script>
+        // ************************************************************************************************************************************************
         // JavaScript to wrap standalone ®, &reg;, ™, and &trade; in spans with symbol-sup class
-        document.addEventListener('DOMContentLoaded', () => {
-            let totalReg = 0;
-            let totalTm = 0;
+        setTimeout(() => {
+            const SYMBOL_REGEX = /(®|™|&reg;|&trade;)/g;
         
-            function wrapSymbols() {
-                let regCount = 0;
-                let tmCount = 0;
+            // Find EVERY text node that contains a symbol
+            const xpath = "//text()[contains(., '®') or contains(., '™') or contains(., '&reg;') or contains(., '&trade;')]";
+            const nodes = document.evaluate(xpath, document.body, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
         
-                const walker = document.createTreeWalker(
-                    document.body,
-                    NodeFilter.SHOW_TEXT,
-                    {
-                        acceptNode: (node) => {
-                            // 1. Skip if already inside .symbol-sup
-                            if (node.parentNode?.closest('.symbol-sup')) {
-                                return NodeFilter.FILTER_REJECT;
-                            }
-                            // 2. Skip excluded areas
-                            if (node.parentElement?.closest('sup, script, style, .card-footer')) {
-                                return NodeFilter.FILTER_REJECT;
-                            }
-                            return NodeFilter.FILTER_ACCEPT;
-                        }
-                    }
-                );
+            let wrapped = 0;
         
-                const nodes = [];
-                let node;
-                while (node = walker.nextNode()) nodes.push(node);
+            for (let i = 0; i < nodes.snapshotLength; i++) {
+                const textNode = nodes.snapshotItem(i);
         
-                const regExp = /(®|™|&reg;|&trade;)/g;
-        
-                nodes.forEach(textNode => {
-                    if (!regExp.test(textNode.textContent)) return;
-        
-                    const replaced = textNode.textContent.replace(regExp, (match) => {
-                        if (match === '®' || match === '&reg;') regCount++;
-                        if (match === '™' || match === '&trade;') tmCount++;
-                        return `<span class="symbol-sup">${match}</span>`;
-                    });
-        
-                    if (replaced !== textNode.textContent) {
-                        const temp = document.createElement('div');
-                        temp.innerHTML = replaced;
-                        const fragment = document.createDocumentFragment();
-                        while (temp.firstChild) fragment.appendChild(temp.firstChild);
-                        textNode.replaceWith(fragment);
-                    }
-                });
-        
-                totalReg += regCount;
-                totalTm += tmCount;
-        
-                // Optional: show final counts once
-                if (regCount || tmCount) {
-                    console.log(`Wrapped: ${regCount} ®/&reg;, ${tmCount} ™/&trade; (total so far: ${totalReg}/${totalTm})`);
+                // Skip if already wrapped or in excluded areas
+                if (textNode.parentNode?.closest('.symbol-sup, sup, script, style, .card-footer')) {
+                    continue;
                 }
+        
+                const parent = textNode.parentNode;
+                const original = textNode.textContent;
+        
+                // Replace symbols with wrapped version
+                const fixed = original.replace(SYMBOL_REGEX, '<span class="symbol-sup">$1</span>');
+        
+                if (original === fixed) continue;
+        
+                // Insert the new HTML
+                const temp = document.createElement('div');
+                temp.innerHTML = fixed;
+                while (temp.firstChild) {
+                    parent.insertBefore(temp.firstChild, textNode);
+                }
+                parent.removeChild(textNode);
+        
+                wrapped++;
             }
         
-            // Run once immediately
-            wrapSymbols();
-        
-            // Then watch for any future text injections (ConveyThis, etc.)
-            const observer = new MutationObserver((mutations) => {
-                let needsProcessing = false;
-        
-                for (const m of mutations) {
-                    if (m.type === 'childList') {
-                        for (const node of m.addedNodes) {
-                            if (node.nodeType === Node.TEXT_NODE && /(®|™|&reg;|&trade;)/.test(node.textContent)) {
-                                needsProcessing = true;
-                            }
-                            if (node.nodeType === Node.ELEMENT_NODE && node.textContent && /(®|™|&reg;|&trade;)/.test(node.textContent)) {
-                                needsProcessing = true;
-                            }
-                        }
-                    }
-                    // characterData catches direct text edits
-                    if (m.type === 'characterData' && /(®|™|&reg;|&trade;)/.test(m.target.textContent)) {
-                        needsProcessing = true;
-                    }
-                }
-        
-                if (needsProcessing) {
-                    // Tiny debounce so multiple rapid mutations don't trigger 20 runs
-                    clearTimeout(window._symbolWrapTimer);
-                    window._symbolWrapTimer = setTimeout(wrapSymbols, 150);
-                }
-            });
-        
-            observer.observe(document.body, {
-                childList: true,
-                subtree: true,
-                characterData: true
-            });
-        
-            // Final stats (optional)
-            setTimeout(() => {
-                console.table([
-                    { Symbol: '® / &reg;', Count: totalReg },
-                    { Symbol: '™ / &trade;', Count: totalTm }
-                ]);
-            }, 5000);
-        });
+            console.table([
+                            { Symbol: '® / &reg;', Count: totalReg },
+                            { Symbol: '™ / &trade;', Count: totalTm }
+                        ]);
+        }, 5000); // 5 seconds after page load — ConveyThis is always done by then
+        // ****************************************************************
     </script>
 </body>
 </html>
