@@ -38,47 +38,52 @@
     <script>
         // JavaScript to wrap standalone ®, &reg;, ™, and &trade; in spans with symbol-sup class
         document.addEventListener('DOMContentLoaded', () => {
-            // Select all text nodes in the document
-            const walker = document.createTreeWalker(
-                document.body,
-                NodeFilter.SHOW_TEXT,
-                {
-                    acceptNode: (node) => {
-                        // Exclude text nodes inside <sup> or <script> elements
-                        if (node.parentElement.closest('sup') || node.parentElement.tagName === 'SCRIPT') {
-                            return NodeFilter.FILTER_REJECT;
-                        }
-                        return NodeFilter.FILTER_ACCEPT;
-                    }
+        let regCount = 0;
+        let tmCount = 0;
+    
+        const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, {
+            acceptNode: (node) => {
+                if (node.parentElement?.closest('sup, script, .card-footer')) {
+                    return NodeFilter.FILTER_REJECT;
+                }
+                return NodeFilter.FILTER_ACCEPT;
+            }
+        });
+    
+        const nodes = [];
+        let node;
+        while (node = walker.nextNode()) nodes.push(node);
+    
+        nodes.forEach(textNode => {
+            const text = textNode.textContent;
+    
+            // Only process if it contains any of the symbols
+            if (!/[®™]|&reg;|&trade;/.test(text)) return;
+    
+            const replaced = text.replace(
+                /(^|\s|[(\[{<"'„‚«])(®|™|&reg;|&trade;)($|\s|[.,!?;:\])}>"'“”»])/g,
+                (match, before, symbol, after) => {
+                    if (symbol === '®' || symbol === '&reg;') regCount++;
+                    if (symbol === '™' || symbol === '&trade;') tmCount++;
+    
+                    return `${before}<span class="symbol-sup">${symbol}</span>${after}`;
                 }
             );
-
-            const nodes = [];
-            let node;
-            // Collect all text nodes
-            while ((node = walker.nextNode())) {
-                nodes.push(node);
+    
+            if (replaced !== text) {
+                const div = document.createElement('div');
+                div.innerHTML = replaced;
+                const fragment = document.createDocumentFragment();
+                while (div.firstChild) fragment.appendChild(div.firstChild);
+                textNode.replaceWith(fragment);
             }
-
-            // Regular expression to match standalone ®, &reg;, ™, or &trade;
-            //const regExp = /(®|&reg;|™|&trade;)/g;
-            const regExp = /(?<!\w)(®|™|&reg;|&trade;)(?!\w)/g;
-
-            nodes.forEach((textNode) => {
-                if (regExp.test(textNode.textContent)) {
-                    // Create a temporary container to parse the text
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = textNode.textContent.replace(regExp, '<span class="symbol-sup">$1</span>');
-
-                    // Replace the text node with the new nodes
-                    const fragment = document.createDocumentFragment();
-                    while (tempDiv.firstChild) {
-                        fragment.appendChild(tempDiv.firstChild);
-                    }
-                    textNode.replaceWith(fragment);
-                }
-            });
         });
+    
+        console.table([
+            { 'Symbol Type': '® or &reg;', 'Occurrences': regCount },
+            { 'Symbol Type': '™ or &trade;', 'Occurrences': tmCount }
+        ]);
+    });
     </script>
 </body>
 </html>
