@@ -61,7 +61,8 @@
             }
 
             // Regular expression to match standalone ®, &reg;, ™, or &trade;
-            const regExp = /(®|&reg;|™|&trade;)/g;
+            //const regExp = /(®|&reg;|™|&trade;)/g;
+            const regExp = /(?<!\w)(®|™|&reg;|&trade;)(?!\w)/g;
 
             nodes.forEach((textNode) => {
                 if (regExp.test(textNode.textContent)) {
