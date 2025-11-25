@@ -5,11 +5,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Joez Better Trademark Styling for the Registered and Trademark Symbols</title>
     <style>
-        /* CSS to style registered and trademark symbols */
+        /* 1. The span starts fully visible (no class yet) */
         .symbol-sup {
-            font-size: 0.6em; /* Smaller size to mimic superscript */
-            vertical-align: super; /* Positions text higher like <sup> */
-            line-height: normal; /* Prevents line spacing issues */
+            display: inline-block;
+            line-height: 1;
+            font-size: 1em;                    /* normal size */
+            vertical-align: baseline;          /* normal position */
+            opacity: 1;
+            margin-left: 1px;
+            
+            /* Animate everything we care about */
+            transition:
+                opacity    0.35s ease,
+                font-size  0.45s ease-out,
+                transform  0.45s ease-out;
+        }
+        
+        /* 2. First stage: fade out to 0% (we add this class first) */
+        .symbol-sup.fade-out {
+            opacity: 0;
+        }
+        
+        /* 3. Second stage: resize + reposition while invisible (add this class next) */
+        .symbol-sup.transformed {
+            font-size: 0.68em;
+            transform: translateY(-0.38em);   /* perfect superscript position */
+            opacity: 0;                        /* stay invisible during transform */
+        }
+        
+        /* 4. Final stage: fade back in (add this class last) */
+        .symbol-sup.show {
+            opacity: 0.92;                     /* or 1 if you want full */
         }
     </style>
 </head>
@@ -37,48 +63,54 @@
   
     <script>
         // ************************************************************************************************************************************************
-        // JavaScript to wrap standalone ®, &reg;, ™, and &trade; in spans with symbol-sup class
         setTimeout(() => {
             const SYMBOL_REGEX = /(®|™|&reg;|&trade;)/g;
-        
-            // Find EVERY text node that contains a symbol
             const xpath = "//text()[contains(., '®') or contains(., '™') or contains(., '&reg;') or contains(., '&trade;')]";
             const nodes = document.evaluate(xpath, document.body, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
         
-            let wrapped = 0;
-        
             for (let i = 0; i < nodes.snapshotLength; i++) {
                 const textNode = nodes.snapshotItem(i);
-        
-                // Skip if already wrapped or in excluded areas
-                if (textNode.parentNode?.closest('.symbol-sup, sup, script, style, .card-footer')) {
-                    continue;
-                }
+                if (textNode.parentNode?.closest('.symbol-sup, sup, script, style, .card-footer')) continue;
         
                 const parent = textNode.parentNode;
                 const original = textNode.textContent;
-        
-                // Replace symbols with wrapped version
                 const fixed = original.replace(SYMBOL_REGEX, '<span class="symbol-sup">$1</span>');
         
                 if (original === fixed) continue;
         
-                // Insert the new HTML
                 const temp = document.createElement('div');
                 temp.innerHTML = fixed;
+        
                 while (temp.firstChild) {
-                    parent.insertBefore(temp.firstChild, textNode);
+                    const span = temp.firstChild;
+                    if (span.classList?.contains('symbol-sup')) {
+                        // Insert the span (fully visible at first)
+                        parent.insertBefore(span, textNode);
+        
+                        // Force reflow so the browser registers the initial state
+                        void span.offsetHeight;
+        
+                        // 1. Fade out
+                        span.classList.add('fade-out');
+        
+                        // 2. After fade-out completes → resize + reposition
+                        setTimeout(() => {
+                            span.classList.add('transformed');
+                        }, 380);   // slightly longer than opacity transition
+        
+                        // 3. After transform completes → fade back in
+                        setTimeout(() => {
+                            span.classList.add('show');
+                        }, 380 + 480);   // 380 + 450ms transform ≈ 830ms total
+                    } else {
+                        parent.insertBefore(span, textNode);
+                    }
                 }
                 parent.removeChild(textNode);
-        
-                wrapped++;
             }
         
-            console.table([
-                            { Symbol: '® / &reg;', Count: totalReg },
-                            { Symbol: '™ / &trade;', Count: totalTm }
-                        ]);
-        }, 5000); // 5 seconds after page load — ConveyThis is always done by then
+            console.log("Trademark symbols: fade out → superscript → fade in complete");
+        }, 5000);
         // ****************************************************************
     </script>
 </body>
