@@ -12,7 +12,7 @@ This makes (TM) and (R) marks in HTML look more like they're supposed to: supers
  - No javascript is needed.
 
 ## Files:
- - Place the `regmark.woff2` file into your fonts folder; this document presumes that to be `url("/assets/fonts/regmark.woff2") format("woff2");`
+ - Place the `regmark.woff2` file into your fonts folder; this document presumes that to be `url("regmark.woff2") format("woff2");`
 
 ## Behavior:
  - Standalone ®, &reg;, ™, and &trade; are styled to appear superscripted.
