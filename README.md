@@ -4,7 +4,8 @@ This makes (TM) and (R) marks in HTML look more like they're supposed to: supers
 ## CSS:
  - ~~The `.reg-trademark` and `.trademark` classes use `font-size: 0.6em` and `vertical-align: super` to mimic the superscript appearance of `<sup>&reg;</sup>` and `<sup>&trade;</sup>`.~~ No more proprietary CSS is needed.
  - Add the new CSS rules to your CSS file
- - Add `var(--regmark-font), ` to the start of your `font-family` tags to use the new font.
+ - Add `var(--regmark-font), ` to the start of your `font-family` tags to use the new font:
+   - body { font-family: var(--regmark-font), Roboto, sans-serif, sans, clean; }
       
 ## JavaScript:
  - ~~Applies a regular expression to match standalone symbols.~~
