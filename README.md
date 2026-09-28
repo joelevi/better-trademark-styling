@@ -21,9 +21,13 @@
        font-style: italic;
        font-display: swap;
      }
+
+    :root {
+      --default-font: "Regmark", Roboto, Arial, sans-serif, sans, clean;
+    }
      
-     body {
-      font-family: var(--regmark-font), Roboto, sans-serif, sans, clean;
+    body {
+      font-family: var(--default-font);
      }
      ```
       
