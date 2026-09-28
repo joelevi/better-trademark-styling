@@ -5,113 +5,45 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Joez Better Trademark Styling for the Registered and Trademark Symbols</title>
     <style>
-        /* 1. The span starts fully visible (no class yet) */
-        .symbol-sup {
-            display: inline-block;
-            line-height: 1;
-            font-size: 1em;                    /* normal size */
-            vertical-align: baseline;          /* normal position */
-            opacity: 1;
-            margin-left: 1px;
-            
-            /* Animate everything we care about */
-            transition:
-                opacity    0.35s ease,
-                font-size  0.45s ease-out,
-                transform  0.45s ease-out;
+        @font-face {
+        font-family: "Regmark";
+        src: url("regmark.woff2") format("woff2");
+        unicode-range: U+00AE, U+2122;
+        font-weight: 100 900;
+        font-style: normal;
+        font-display: swap;
         }
         
-        /* 2. First stage: fade out to 0% (we add this class first) */
-        .symbol-sup.fade-out {
-            opacity: 0;
+        @font-face {
+        font-family: "Regmark";
+        src: url("regmark.woff2") format("woff2");
+        unicode-range: U+00AE, U+2122;
+        font-weight: 100 900;
+        font-style: italic;
+        font-display: swap;
         }
-        
-        /* 3. Second stage: resize + reposition while invisible (add this class next) */
-        .symbol-sup.transformed {
-            font-size: 0.68em;
-            transform: translateY(-0.38em);   /* perfect superscript position */
-            opacity: 0;                        /* stay invisible during transform */
+
+        :root {
+            --default-font: "Regmark", Roboto, Arial, sans-serif, clean;
         }
-        
-        /* 4. Final stage: fade back in (add this class last) */
-        .symbol-sup.show {
-            opacity: 0.92;                     /* or 1 if you want full */
+
+        body {
+            font-family: var(--default-font);
         }
     </style>
 </head>
 <body>
     <h1>Joez Better Trademark Styling for the Registered and Trademark Symbols</h1>
-    <h2>CSS:</h2>
-    <p>The `.reg-trademark` and `.trademark` classes use `font-size: 0.6em` and `vertical-align: super` to mimic the superscript appearance of <pre><sup>&reg;</sup></pre> and <pre><sup>&trade;</sup></pre>. </p>
-      
-    <h2>JavaScript:</h2>
-    <p>Uses a `TreeWalker` to select text nodes, explicitly excluding those within <pre><sup></pre> or <pre><script></pre> tags via the `acceptNode` filter. </p>
-    <p>Applies a regular expression <pre>(®|&reg;|™|&trade;)</pre> to match standalone symbols. </p>
-    <p>Wraps matched symbols in <pre><span class="symbol-sup"></pre> tags. </p>
 
     <h2>Behavior:</h2>
     <p>Standalone ®, &reg;, ™, and &trade; are styled to appear superscripted. </p>
-    <p>This solution ensures that only standalone ®, &reg;, ™, and &trade; symbols are styled, leaving <pre><sup>&reg;</sup></pre> and <pre><sup>&trade;</sup></pre> untouched. </p>
 
     <h2>Example:</h2>
     <ul>
       <li>This is a test of symbols: ®, &reg;, ™, and &trade; in text</li>
       <li>BrandName® and BrandName&reg; should appear superscripted</li>
       <li>ProductName™ and ProductName&trade; should also appear superscripted</li>
-      <li>Ignored cases: BrandName<sup>&reg;</sup> and ProductName<sup>&trade;</sup> remain unchanged</li>
     </ul>
   
-    <script>
-        // ************************************************************************************************************************************************
-        setTimeout(() => {
-            const SYMBOL_REGEX = /(®|™|&reg;|&trade;)/g;
-            const xpath = "//text()[contains(., '®') or contains(., '™') or contains(., '&reg;') or contains(., '&trade;')]";
-            const nodes = document.evaluate(xpath, document.body, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-        
-            for (let i = 0; i < nodes.snapshotLength; i++) {
-                const textNode = nodes.snapshotItem(i);
-                if (textNode.parentNode?.closest('.symbol-sup, sup, script, style, .card-footer')) continue;
-        
-                const parent = textNode.parentNode;
-                const original = textNode.textContent;
-                const fixed = original.replace(SYMBOL_REGEX, '<span class="symbol-sup">$1</span>');
-        
-                if (original === fixed) continue;
-        
-                const temp = document.createElement('div');
-                temp.innerHTML = fixed;
-        
-                while (temp.firstChild) {
-                    const span = temp.firstChild;
-                    if (span.classList?.contains('symbol-sup')) {
-                        // Insert the span (fully visible at first)
-                        parent.insertBefore(span, textNode);
-        
-                        // Force reflow so the browser registers the initial state
-                        void span.offsetHeight;
-        
-                        // 1. Fade out
-                        span.classList.add('fade-out');
-        
-                        // 2. After fade-out completes → resize + reposition
-                        setTimeout(() => {
-                            span.classList.add('transformed');
-                        }, 380);   // slightly longer than opacity transition
-        
-                        // 3. After transform completes → fade back in
-                        setTimeout(() => {
-                            span.classList.add('show');
-                        }, 380 + 480);   // 380 + 450ms transform ≈ 830ms total
-                    } else {
-                        parent.insertBefore(span, textNode);
-                    }
-                }
-                parent.removeChild(textNode);
-            }
-        
-            console.log("Trademark symbols: fade out → superscript → fade in complete");
-        }, 5000);
-        // ****************************************************************
-    </script>
 </body>
 </html>
